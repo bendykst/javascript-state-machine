@@ -14,10 +14,12 @@ var PublicMethods = {
   is:                  function(state)       { return this._fsm.is(state)                                     },
   can:                 function(transition)  { return this._fsm.can(transition)                               },
   cannot:              function(transition)  { return this._fsm.cannot(transition)                            },
+  inRegion:            function(region)      { return this._fsm.inRegion(region)                                    },
   observe:             function()            { return this._fsm.observe(arguments)                            },
   transitions:         function()            { return this._fsm.transitions()                                 },
   allTransitions:      function()            { return this._fsm.allTransitions()                              },
   allStates:           function()            { return this._fsm.allStates()                                   },
+  allRegions:          function()            { return this._fsm.allRegions()                                  },
   onInvalidTransition: function(t, from, to) { return this._fsm.onInvalidTransition(t, from, to)              },
   onPendingTransition: function(t, from, to) { return this._fsm.onPendingTransition(t, from, to)              },
 }
@@ -31,6 +33,16 @@ var PublicProperties = {
     },
     set: function(state) {
       throw Error('use transitions to change state')
+    }
+  },
+  regions: {
+    configurable: false,
+    enumerable:   true,
+    get: function() {
+      return this._fsm.regions;
+    },
+    set: function(region) {
+      throw Error('use transitions to change region')
     }
   }
 }

@@ -3,6 +3,7 @@
 //-------------------------------------------------------------------------------------------------
 
 var mixin    = require('./util/mixin'),
+    Exception  = require('./util/exception'),
     camelize = require('./util/camelize');
 
 //-------------------------------------------------------------------------------------------------
@@ -11,19 +12,22 @@ function Config(options, StateMachine) {
 
   options = options || {};
 
-  this.options     = options; // preserving original options can be useful (e.g visualize plugin)
-  this.defaults    = StateMachine.defaults;
-  this.states      = [];
-  this.transitions = [];
-  this.map         = {};
-  this.lifecycle   = this.configureLifecycle();
-  this.init        = this.configureInitTransition(options.init);
-  this.data        = this.configureData(options.data);
-  this.methods     = this.configureMethods(options.methods);
+  this.options      = options; // preserving original options can be useful (e.g visualize plugin)
+  this.defaults     = StateMachine.defaults;
+  this.states       = [];
+  this.transitions  = [];
+  this.regionList   = [];
+  this.stateRegions = {};
+  this.map          = {};
+  this.lifecycle    = this.configureLifecycle();
+  this.init         = this.configureInitTransition(options.init);
+  this.data         = this.configureData(options.data);
+  this.methods      = this.configureMethods(options.methods);
 
   this.map[this.defaults.wildcard] = {};
 
   this.configureTransitions(options.transitions || []);
+  this.configureRegions(options.regions || []);
 
   this.plugins = this.configurePlugins(options.plugins, StateMachine.plugin);
 
@@ -38,6 +42,7 @@ mixin(Config.prototype, {
       this.states.push(name);
       this.addStateLifecycleNames(name);
       this.map[name] = {};
+      this.stateRegions[name] = [];
     }
   },
 
@@ -133,6 +138,44 @@ mixin(Config.prototype, {
     }
   },
 
+  addRegion: function(name) {
+    this.regionList.push(name);
+  },
+
+  configureRegions: function(regions) {
+    var i, n, region, state, states;
+
+    // Sorting regions by name ensures regions will be in alphabetical order both
+    // in this.regions and each entry  in this.stateRegions
+    regions.sort(function(a, b) {
+      if (a.name > b.name) {
+        return 1;
+      }
+      else if (a.name < b.name) {
+        return -1;
+      }
+      else {
+        return 0;
+      }
+    });
+
+    for(n = 0 ; n < regions.length ; n++) {
+      region = regions[n];
+      states = region.states;
+
+      if (n > 0 && region.name === regions[n-1].name) {
+        throw new Exception("regions must be uniquely named", region[n-1], region);
+      }
+
+      this.addRegion(region.name);
+      for(i = 0 ; i < states.length ; i++) {
+        state = states[i];
+        this.addState(state);
+        this.stateRegions[state].push(region.name);
+      }
+    }
+  },
+
   transitionFor: function(state, transition) {
     var wildcard = this.defaults.wildcard;
     return this.map[state][transition] ||
@@ -150,6 +193,10 @@ mixin(Config.prototype, {
 
   allTransitions: function() {
     return this.transitions;
+  },
+
+  allRegions: function() {
+    return this.regionList;
   }
 
 });

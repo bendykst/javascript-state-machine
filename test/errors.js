@@ -22,6 +22,50 @@ test('state cannot be modified directly', t => {
 
 //-------------------------------------------------------------------------------------------------
 
+test('region cannot be modified directly', t => {
+
+  var fsm = new StateMachine({
+    transitions: [
+      { name: 'step', from: 'none', to: 'complete' }
+    ],
+    regions: [
+      { name: 'fullmachine', states: [ 'none', 'complete' ] }
+    ]
+  })
+
+  t.is(fsm.state, 'none')
+  t.deepEqual(fsm.regions, [ 'fullmachine' ])
+  var error = t.throws(() => {
+    fsm.regions = []
+  })
+  t.is(error.message, 'use transitions to change region')
+  t.deepEqual(fsm.regions, [ 'fullmachine' ])
+
+})
+
+//-------------------------------------------------------------------------------------------------
+
+test('regions must have unique names', t => {
+
+  var error = t.throws(() => {
+    var fsm = new StateMachine({
+      init: 'A',
+      transitions: [
+        { name: 'step1', from: 'A', to: 'B' },
+        { name: 'step2', from: 'B', to: 'C' }
+      ],
+      regions: [
+        { name: 'AB', states: ['A', 'B'] },
+        { name: 'notunique', states: ['B', 'C'] },
+        { name: 'notunique', states: ['A', 'C'] }
+      ]
+    });
+  });
+  t.is(error.message, 'regions must be uniquely named')
+})
+
+//-------------------------------------------------------------------------------------------------
+
 test('StateMachine.apply only allowed on objects', t => {
 
   var config = {

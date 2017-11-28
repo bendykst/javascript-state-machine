@@ -21,6 +21,7 @@ test('state machine', t => {
     ]
   })
 
+
   t.is(fsm.state, 'green')
 
   fsm.warn();  t.is(fsm.state, 'yellow')

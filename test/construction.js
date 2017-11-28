@@ -122,6 +122,83 @@ test('singleton construction - with custom data and methods', t => {
 
 //-------------------------------------------------------------------------------------------------
 
+test('singleton construction - with regions', t => {
+
+  var fsm = new StateMachine({
+    init: 'A',
+    transitions: [
+      { name: 'step1', from: 'A', to: 'B' },
+      { name: 'step2', from: 'B', to: 'C' }
+    ],
+    regions: [
+      { name: 'AB', states: ['A', 'B'] },
+      { name: 'AC', states: ['A', 'C'] },
+      { name: 'BC', states: ['B', 'C'] }
+    ]
+  });
+
+  t.deepEqual(fsm.allRegions(), [ 'AB', 'AC', 'BC' ])
+
+  t.deepEqual(fsm.regions, [ 'AB', 'AC' ])
+  t.is(fsm.inRegion('AB'), true)
+  t.is(fsm.inRegion('AC'), true)
+  t.is(fsm.inRegion('BC'), false)
+
+  fsm.step1()
+
+  t.deepEqual(fsm.regions, [ 'AB', 'BC' ])
+  t.is(fsm.inRegion('AB'), true)
+  t.is(fsm.inRegion('AC'), false)
+  t.is(fsm.inRegion('BC'), true)
+
+  fsm.step2()
+
+  t.deepEqual(fsm.regions, [ 'AC', 'BC' ])
+  t.is(fsm.inRegion('AB'), false)
+  t.is(fsm.inRegion('AC'), true)
+  t.is(fsm.inRegion('BC'), true)
+
+})
+
+//-------------------------------------------------------------------------------------------------
+
+test('singleton construction - with no regions', t => {
+
+  var fsm = new StateMachine({
+    init: 'A',
+    transitions: [
+      { name: 'step1', from: 'A', to: 'B' },
+      { name: 'step2', from: 'B', to: 'C' }
+    ]
+  });
+
+  t.deepEqual(fsm.allRegions(), [ ])
+  t.deepEqual(fsm.regions, [ ])
+
+})
+
+//-------------------------------------------------------------------------------------------------
+
+test('regions are alphabetically sorted by name', t => {
+
+  var fsm = new StateMachine({
+    init: 'A',
+    transitions: [
+      { name: 'step1', from: 'A', to: 'B' },
+      { name: 'step2', from: 'B', to: 'C' }
+    ],
+    regions: [
+      { name: 'AB', states: ['A', 'B'] },
+      { name: 'BC', states: ['B', 'C'] },
+      { name: 'AC', states: ['A', 'C'] }
+    ]
+  });
+
+  t.deepEqual(fsm.allRegions(), [ 'AB', 'AC', 'BC' ])
+})
+
+//-------------------------------------------------------------------------------------------------
+
 test('factory construction', t => {
 
   var MyClass = StateMachine.factory({

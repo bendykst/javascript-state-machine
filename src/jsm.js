@@ -10,6 +10,7 @@ function JSM(context, config) {
   this.context   = context;
   this.config    = config;
   this.state     = config.init.from;
+  this.regions   = this.config.stateRegions[this.state];
   this.observers = [context];
 }
 
@@ -40,12 +41,20 @@ mixin(JSM.prototype, {
     return !this.can(transition);
   },
 
+  inRegion: function(region) {
+    return this.regions.indexOf(region) >= 0;
+  },
+
   allStates: function() {
     return this.config.allStates();
   },
 
   allTransitions: function() {
     return this.config.allTransitions();
+  },
+
+  allRegions: function() {
+    return this.config.allRegions();
   },
 
   transitions: function() {
@@ -109,7 +118,10 @@ mixin(JSM.prototype, {
   beginTransit: function()          { this.pending = true;                 },
   endTransit:   function(result)    { this.pending = false; return result; },
   failTransit:  function(result)    { this.pending = false; throw result;  },
-  doTransit:    function(lifecycle) { this.state = lifecycle.to;           },
+  doTransit:    function(lifecycle) {
+    this.state = lifecycle.to;
+    this.regions = this.config.stateRegions[lifecycle.to];
+  },
 
   observe: function(args) {
     if (args.length === 2) {
